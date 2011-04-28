@@ -4,13 +4,12 @@
 package org.arachna.dot4j;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Collection;
+import java.util.Map;
 
-import org.arachna.dot4j.model.Attributes;
-import org.arachna.dot4j.model.Attributes.KeyValuePair;
 import org.arachna.dot4j.model.Edge;
 import org.arachna.dot4j.model.Graph;
+import org.arachna.dot4j.model.HasAttributes;
 import org.arachna.dot4j.model.Node;
 
 /**
@@ -18,102 +17,102 @@ import org.arachna.dot4j.model.Node;
  */
 public final class DotGenerator {
 
-    /**
-     * Graph to generate .dot file from.
-     */
-    private final Graph graph;
-
-    public DotGenerator(final Graph graph) {
-        if (graph == null) {
-            throw new IllegalArgumentException("Graph must not be null!");
-        }
-
-        this.graph = graph;
+    private DotGenerator() {
     }
 
-    public void generate(final Writer writer) throws IOException {
-        writer.append("digraph ");
-        writer.append("{\n");
-        writer.append(emitGraph(graph));
-        writer.append("}\n");
+    public static void generate(Appendable appendable, Graph graph) throws IOException {
+        appendable.append("digraph ");
+        appendable.append(graph.getId());
+        appendable.append(" {\n");
+        appendable.append(emitGraph(graph));
+        appendable.append("}\n");
     }
 
     /**
      * @return
+     * @param graph
+     * @param result
      */
-    private String emitCommonEdgeAttributes() {
-        final StringBuffer result = new StringBuffer();
+    private static void appendCommonEdgeAttributes(Graph graph, StringBuilder result) {
 
         if (!graph.getEdgeAttributes().isEmpty()) {
-            result.append(String.format("edge %s;", emitAttributes(graph.getEdgeAttributes())));
+            result.append("edge");
+            appendAttributes(graph.getEdgeAttributes(), result);
+            result.append(";\n");
         }
-
-        return result.toString();
     }
 
     /**
      * @return
+     * @param graph
+     * @param result
      */
-    private String emitCommonNodeAttributes() {
-        final StringBuffer result = new StringBuffer();
-
+    private static void appendCommonNodeAttributes(Graph graph, StringBuilder result) {
         if (!graph.getEdgeAttributes().isEmpty()) {
-            result.append(String.format("node %s;", emitAttributes(graph.getNodeAttributes())));
+            result.append("node");
+            appendAttributes(graph.getNodeAttributes(), result);
+            result.append(";\n");
         }
-
-        return result.toString();
     }
 
     /**
      * @param writer
      * @throws IOException
      */
-    private String emitGraph(final Graph graph) {
-        final StringBuffer result = new StringBuffer();
+    private static String emitGraph(Graph graph) {
+        final StringBuilder result = new StringBuilder();
 
-        result.append(this.emitGraphAttributes(graph.getAttributes()));
-        result.append(emitCommonNodeAttributes());
-        result.append(emitCommonEdgeAttributes());
-        result.append(emitNodes(graph.getNodes()));
-        result.append(emitEdges(graph.getEdges()));
+        appendGraphAttributes(graph, result);
+        appendCommonNodeAttributes(graph, result);
+        appendCommonEdgeAttributes(graph, result);
+        appendNodes(graph.getNodes(), result);
+        appendEdges(graph.getEdges(), result);
         result.append(emitClusters(graph.getClusters()));
 
         return result.toString();
     }
 
-    private String emitGraphAttributes(final Attributes attributes) {
-        final StringBuffer result = new StringBuffer();
+    private static void appendGraphAttributes(Graph graph, StringBuilder result) {
 
-        for (final KeyValuePair pair : attributes) {
-            result.append(String.format("%s = \"%s\";\n", pair.getKey(), pair.getValue()));
+        for (Map.Entry<String, String> entry : graph) {
+            result.append(entry.getKey()).append('=').append(entry.getValue()).append(";\n");
         }
-
-        return result.toString();
     }
 
-    protected StringBuffer emitEdges(final Collection<Edge> edges) {
-        final StringBuffer result = new StringBuffer();
-
-        for (final Edge edge : edges) {
-            result.append(emitEdge(edge));
-        }
-
+    protected static StringBuilder emitEdges(final Collection<Edge> edges) {
+        final StringBuilder result = new StringBuilder();
+        appendEdges(edges, result);
         return result;
+    }
+
+    private static void appendEdges(Collection<Edge> edges, StringBuilder result) {
+        for (final Edge edge : edges) {
+            appendEdge(edge, result);
+        }
     }
 
     /**
      * @param edge
      */
-    protected String emitEdge(final Edge edge) {
-        return String.format("node%s -> node%s%s;\n", edge.getStartNode().getId(), edge.getEndNode().getId(),
-            emitAttributes(edge.getAttributes()));
+    protected static String emitEdge(final Edge edge) {
+        final StringBuilder buf = new StringBuilder();
+        appendEdge(edge, buf);
+        return buf.toString();
+    }
+
+    private static void appendEdge(Edge edge, StringBuilder buf) {
+        buf.append(edge.getStartNodeId());
+        buf.append(" -> ");
+        buf.append(edge.getEndId());
+        appendAttributes(edge, buf);
+        buf.append(";\n");
     }
 
     /**
      * @param clusters
      * @throws IOException
      */
-    protected StringBuffer emitClusters(final Collection<Graph> clusters) {
+    protected static StringBuffer emitClusters(final Collection<Graph> clusters) {
         final StringBuffer result = new StringBuffer();
 
         for (final Graph cluster : clusters) {
@@ -123,22 +122,13 @@ public final class DotGenerator {
         return result;
     }
 
-    /**
-     * @param writer
-     * @param nodes
-     * @throws IOException
-     */
-    protected StringBuffer emitNodes(final Collection<Node> nodes) {
-        final StringBuffer result = new StringBuffer();
-
+    private static void appendNodes(Collection<Node> nodes, StringBuilder buf) {
         for (final Node node : nodes) {
-            result.append(emitNode(node));
+            appendNode(node, buf);
         }
-
-        return result;
     }
 
-    protected StringBuffer emitCluster(final Graph cluster) {
+    protected static StringBuffer emitCluster(final Graph cluster) {
         final StringBuffer result = new StringBuffer();
 
         result.append(String.format("subgraph cluster%s {\n", cluster.getId()));
@@ -148,23 +138,33 @@ public final class DotGenerator {
         return result;
     }
 
-    protected String emitNode(final Node node) {
-        return String.format("node%s%s;\n", node.getId(), emitAttributes(node.getAttributes()));
+    protected static String emitNode(final Node node) {
+        final StringBuilder buf = new StringBuilder();
+        appendNode(node, buf);
+        return buf.toString();
     }
 
-    protected StringBuffer emitAttributes(final Attributes attributes) {
-        final StringBuffer result = new StringBuffer();
+    private static void appendNode(Node node, StringBuilder buf) {
+        buf.append(node.getId());
+        appendAttributes(node, buf);
+        buf.append(";\n");
+    }
 
-        if (!attributes.isEmpty()) {
-            result.append(" [");
-
-            for (final Attributes.KeyValuePair pair : attributes) {
-                result.append(String.format(" %s=\"%s\"", pair.getKey(), pair.getValue()));
-            }
-
-            result.append("]");
-        }
-
+    protected static StringBuilder emitAttributes(final HasAttributes attributes) {
+        final StringBuilder result = new StringBuilder();
+        appendAttributes(attributes, result);
         return result;
+    }
+
+    private static void appendAttributes(HasAttributes attributes, StringBuilder buf) {
+        if (attributes != null && !attributes.isEmpty()) {
+            buf.append(" [");
+
+            for (final Map.Entry<String, String> pair : attributes) {
+                buf.append(pair.getKey()).append("=").append(pair.getValue()).append(", ");
+            }
+            buf.setLength(buf.length() - 1);
+            buf.setCharAt(buf.length() - 1, ']');
+        }
     }
 }

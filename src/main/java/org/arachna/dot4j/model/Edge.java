@@ -6,39 +6,24 @@ package org.arachna.dot4j.model;
 /**
  * @author Dirk Weigenand
  */
-public class Edge {
-    private final Node startNode;
-    private final Node endNode;
-    private final Attributes attributes = new Attributes();
+public final class Edge extends Attributes {
+    private final String startNodeId;
+    private final String endNodeId;
 
-    Edge(final Node startNode, final Node endNode) {
-
-        if (startNode == null || endNode == null) {
+    Edge(String startNodeId, String endNodeId) {
+        if (startNodeId == null || endNodeId == null) {
             throw new IllegalArgumentException("start and end node must not be null!");
         }
 
-        this.startNode = startNode;
-        this.endNode = endNode;
+        this.startNodeId = startNodeId;
+        this.endNodeId = endNodeId;
     }
 
-    /**
-     * @return the startNode
-     */
-    public Node getStartNode() {
-        return startNode;
+    public String getStartNodeId() {
+        return startNodeId;
     }
 
-    /**
-     * @return the endNode
-     */
-    public Node getEndNode() {
-        return endNode;
-    }
-
-    /**
-     * @return the attributes
-     */
-    public Attributes getAttributes() {
-        return attributes;
+    public String getEndId() {
+        return endNodeId;
     }
 }

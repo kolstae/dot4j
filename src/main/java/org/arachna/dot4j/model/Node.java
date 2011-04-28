@@ -6,32 +6,26 @@ package org.arachna.dot4j.model;
 /**
  * @author Dirk Weigenand
  */
-public final class Node {
+public final class Node extends Attributes {
     /**
      * node Id.
      */
-    private final Id id;
-
-    private final Attributes attributes = new Attributes();
+    private final String id;
 
     /**
      * Create a new node with the given id.
-     * 
+     *
      * @param id
      *            node Id.
      */
-    Node(final Id id) {
+    Node(final String id) {
         this.id = id;
     }
 
     /**
      * @return the id
      */
-    public Id getId() {
+    public String getId() {
         return id;
-    }
-
-    public Attributes getAttributes() {
-        return attributes;
     }
 }

@@ -9,35 +9,24 @@ import java.util.Collections;
 
 /**
  * A GraphViz graph.
- * 
+ *
  * @author Dirk Weigenand
- * 
  */
-public class Graph {
+public final class Graph extends Attributes {
     /**
      * Id of this cluster.
      */
-    private final Id id;
-
-    /**
-     * if this is not null, this graph is a subgraph or cluster.
-     */
-    private final Graph parent;
-
-    /**
-     * attributes for this graph.
-     */
-    private final Attributes attributes = new Attributes();
+    private final String id;
 
     /**
      * common attributes for this graphs nodes.
      */
-    private final Attributes nodeAttributes = new Attributes();
+    private final HasAttributes nodeAttributes = new Attributes();
 
     /**
      * common attributes for this graphs edges.
      */
-    private final Attributes edgeAttributes = new Attributes();
+    private final HasAttributes edgeAttributes = new Attributes();
 
     /**
      * factory for cluster ids.
@@ -47,7 +36,7 @@ public class Graph {
     /**
      * factory for node ids.
      */
-    private IdFactory nodeIdFactory;
+    private final IdFactory nodeIdFactory;
 
     /**
      * Clusters contained in this graph.
@@ -66,62 +55,99 @@ public class Graph {
 
     /**
      * Create a subgraph or cluster with the given parent graph.
-     * 
-     * @param parent
-     *            parent graph
+     *
+     * @param parent parent graph
      */
-    private Graph(final Graph parent) {
-        this.parent = parent;
+    public Graph(String id) {
+        this.id = id;
+        clusterIdFactory = new IdFactory();
+        nodeIdFactory = new IdFactory();
+    }
 
-        if (this.parent != null) {
-            this.clusterIdFactory = parent.getClusterIdFactory();
-            this.nodeIdFactory = parent.getNodeIdFactory();
-        }
-        else {
-            this.clusterIdFactory = new IdFactory();
-            this.nodeIdFactory = new IdFactory();
+    /**
+     * Create a subgraph or cluster with the given parent graph.
+     *
+     * @param parent parent graph
+     * @param id
+     */
+    private Graph(Graph parent) {
+
+        if (parent != null) {
+            clusterIdFactory = parent.getClusterIdFactory();
+            nodeIdFactory = parent.getNodeIdFactory();
+        } else {
+            clusterIdFactory = new IdFactory();
+            nodeIdFactory = new IdFactory();
         }
 
-        this.id = this.clusterIdFactory.nextId();
+        id = clusterIdFactory.nextId();
     }
 
     /**
      * Create a top level graph object.
      */
     public Graph() {
-        this(null);
+        this("");
     }
 
     /**
      * Create a new subgraph/cluster.
-     * 
+     *
      * @return a new subgraph/cluster.
      */
     public Graph newGraph() {
         final Graph child = new Graph(this);
 
-        this.clusters.add(child);
+        clusters.add(child);
 
         return child;
     }
 
     /**
      * Create a node and associate it with this graph/cluster.
-     * 
+     *
      * @return creates a new node object and associates it with this cluster.
      */
     public Node newNode() {
-        final Node node = new Node(this.nodeIdFactory.nextId());
+        return newNode(nodeIdFactory.nextId());
+    }
 
-        this.nodes.add(node);
+    public Node newNode(int id) {
+        return newNode(Integer.toString(id));
+    }
+
+    public Node newNode(long id) {
+        return newNode(Long.toString(id));
+    }
+
+    public Node newNode(String id) {
+        final Node node = new Node(id);
+
+        nodes.add(node);
 
         return node;
     }
 
     public Edge newEdge(final Node startNode, final Node endNode) {
-        final Edge edge = new Edge(startNode, endNode);
+        if (startNode == null || endNode == null) {
+            throw new IllegalArgumentException("start and end node must not be null!");
+        }
 
-        this.edges.add(edge);
+        return newEdge(startNode.getId(), endNode.getId());
+    }
+
+    public Edge newEdge(int startNodeId, int endNodeId) {
+        return newEdge(Integer.toString(startNodeId), Integer.toString(endNodeId));
+    }
+
+    public Edge newEdge(long startNodeId, long endNodeId) {
+        return newEdge(Long.toString(startNodeId), Long.toString(endNodeId));
+    }
+
+    public Edge newEdge(String startNodeId, String endNodeId) {
+        final Edge edge = new Edge(startNodeId, endNodeId);
+
+        edges.add(edge);
 
         return edge;
     }
@@ -158,38 +184,31 @@ public class Graph {
      * @return the nodeIdFactory
      */
     private IdFactory getNodeIdFactory() {
-        return this.nodeIdFactory;
+        return nodeIdFactory;
     }
 
     /**
      * @return the id
      */
-    public Id getId() {
+    public String getId() {
         return id;
-    }
-
-    /**
-     * @return the attributes
-     */
-    public Attributes getAttributes() {
-        return attributes;
     }
 
     /**
      * @return the edgeAttributes
      */
-    public Attributes getEdgeAttributes() {
+    public HasAttributes getEdgeAttributes() {
         return edgeAttributes;
     }
 
     /**
      * @return the nodeAttributes
      */
-    public Attributes getNodeAttributes() {
+    public HasAttributes getNodeAttributes() {
         return nodeAttributes;
     }
 
-    protected final class IdFactory {
+    protected static final class IdFactory {
         /**
          * counter for ids.
          */
@@ -197,11 +216,11 @@ public class Graph {
 
         /**
          * Returns the current id and increments the internal id counter.
-         * 
+         *
          * @return next id value.
          */
-        synchronized Id nextId() {
-            return new Id(currentId++);
+        synchronized String nextId() {
+            return Long.toString(currentId++);
         }
     }
 }

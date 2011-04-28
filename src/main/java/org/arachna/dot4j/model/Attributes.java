@@ -4,81 +4,53 @@
 package org.arachna.dot4j.model;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
-
-import org.arachna.dot4j.model.Attributes.KeyValuePair;
 
 /**
  * @author Dirk Weigenand
  */
-public class Attributes implements Iterable<KeyValuePair> {
+public class Attributes implements HasAttributes {
     /**
      *
      */
-    private final Map<String, String> attributes = new TreeMap<String, String>();
+    private final Map<String, String> attributes = new LinkedHashMap<String, String>();
 
-    public void setAttribute(final String key, final String value) {
-        this.attributes.put(key, value);
+    public HasAttributes setAttribute(String key, String value) {
+        attributes.put(key, '"' + value + '"');
+        return this;
     }
 
-    public String getAttribute(final String key, final String value) {
-        return this.attributes.get(key);
+    public HasAttributes setIDAttribute(String key, String id) {
+        attributes.put(key, id);
+        return this;
+    }
+
+    public HasAttributes setAttribute(String key, int value) {
+        attributes.put(key, Integer.toString(value));
+        return this;
+    }
+
+    public HasAttributes setAttribute(String key, long value) {
+        attributes.put(key, Long.toString(value));
+        return this;
+    }
+
+    public HasAttributes setAttribute(String key, float value) {
+        attributes.put(key, Float.toString(value));
+        return this;
+    }
+
+    public HasAttributes setAttribute(String key, double value) {
+        attributes.put(key, Double.toString(value));
+        return this;
     }
 
     public boolean isEmpty() {
-        return this.attributes.isEmpty();
+        return attributes.isEmpty();
     }
 
-    public Iterator<KeyValuePair> iterator() {
-        return new AttributeIterator(attributes);
-    }
-
-    public final class KeyValuePair {
-        private final String key;
-
-        private final String value;
-
-        protected KeyValuePair(final String key, final String value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        /**
-         * @return the key
-         */
-        public String getKey() {
-            return key;
-        }
-
-        /**
-         * @return the value
-         */
-        public String getValue() {
-            return value;
-        }
-    }
-
-    private class AttributeIterator implements Iterator<KeyValuePair> {
-        Iterator<Map.Entry<String, String>> pairs;
-
-        AttributeIterator(final Map<String, String> attributes) {
-            pairs = attributes.entrySet().iterator();
-        }
-
-        public boolean hasNext() {
-            return pairs.hasNext();
-        }
-
-        public KeyValuePair next() {
-            final Map.Entry<String, String> entry = pairs.next();
-
-            return new KeyValuePair(entry.getKey(), entry.getValue());
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
+    public Iterator<Map.Entry<String,String>> iterator() {
+        return attributes.entrySet().iterator();
     }
 }

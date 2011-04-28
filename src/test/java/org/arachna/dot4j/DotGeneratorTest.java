@@ -3,8 +3,6 @@
  */
 package org.arachna.dot4j;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -12,87 +10,53 @@ import java.util.Arrays;
 import org.arachna.dot4j.model.Attributes;
 import org.arachna.dot4j.model.Edge;
 import org.arachna.dot4j.model.Graph;
+import org.arachna.dot4j.model.HasAttributes;
 import org.arachna.dot4j.model.Node;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Dirk Weigenand
- * 
+ *
  */
 public class DotGeneratorTest {
     private Graph graph;
-    private DotGenerator generator;
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
-        this.graph = new Graph();
-        this.generator = new DotGenerator(this.graph);
+        graph = new Graph("1");
     }
 
-    /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {
-        this.graph = null;
-    }
-
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#DotGenerator(org.arachna.dot4j.model.Graph)}
-     * .
-     * 
-     * @throws IOException
-     */
     @Test
     public final void testGenerateEmptyGraph() throws IOException {
         final StringWriter result = new StringWriter();
-        this.generator.generate(result);
+        DotGenerator.generate(result, graph);
 
-        assertEquals("digraph {\n}\n", result.toString());
+        assertEquals("digraph 1 {\n}\n", result.toString());
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#generate(java.io.Writer)}.
-     * 
-     * @throws IOException
-     */
     @Test
     public final void testGenerateOneNode() throws IOException {
         graph.newNode();
         final StringWriter result = new StringWriter();
-        this.generator.generate(result);
+        DotGenerator.generate(result, graph);
 
-        assertEquals("digraph {\nnode0;\n}\n", result.toString());
+        assertEquals("digraph 1 {\n0;\n}\n",  result.toString());
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#generate(java.io.Writer)}.
-     * 
-     * @throws IOException
-     */
     @Test
     public final void testGenerateTwoNodes() throws IOException {
         graph.newNode();
         graph.newNode();
 
         final StringWriter result = new StringWriter();
-        this.generator.generate(result);
+        DotGenerator.generate(result, graph);
 
-        assertEquals("digraph {\nnode0;\nnode1;\n}\n", result.toString());
+        assertEquals("digraph 1 {\n0;\n1;\n}\n", result.toString());
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitEdges(java.util.Collection)}.
-     */
     @Test
     public final void testEmitEdgesWithoutAttributes() {
         final Node start = graph.newNode();
@@ -101,130 +65,85 @@ public class DotGeneratorTest {
 
         final Edge firstEdge = graph.newEdge(start, middle);
         final Edge secondEdge = graph.newEdge(middle, end);
-        final String result = this.generator.emitEdges(Arrays.asList(new Edge[] { firstEdge, secondEdge })).toString();
+        final String result = DotGenerator.emitEdges(Arrays.asList(firstEdge, secondEdge)).toString();
 
-        assertEquals("node0 -> node1;\nnode1 -> node2;\n", result.toString());
+        assertEquals("0 -> 1;\n1 -> 2;\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitEdge(org.arachna.dot4j.model.Edge)}
-     * .
-     */
     @Test
     public final void testEmitEdgeWithoutAttributes() {
         final Node start = graph.newNode();
         final Node end = graph.newNode();
 
         final Edge edge = graph.newEdge(start, end);
-        final String result = this.generator.emitEdge(edge);
+        final String result = DotGenerator.emitEdge(edge);
 
-        assertEquals("node0 -> node1;\n", result.toString());
+        assertEquals("0 -> 1;\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitClusters(java.util.Collection)}
-     * .
-     * 
-     * @throws IOException
-     */
     @Test
     public final void testEmitClusters() {
-        final Graph firstCluster = this.graph.newGraph();
-        final Graph secondCluster = this.graph.newGraph();
-        final String result =
-            this.generator.emitClusters(Arrays.asList(new Graph[] { firstCluster, secondCluster })).toString();
+        final Graph firstCluster = graph.newGraph();
+        final Graph secondCluster = graph.newGraph();
+        final String result = DotGenerator.emitClusters(Arrays.asList(firstCluster, secondCluster)).toString();
 
-        assertEquals("subgraph cluster1 {\n}\nsubgraph cluster2 {\n}\n", result);
+        assertEquals("subgraph cluster0 {\n}\nsubgraph cluster1 {\n}\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitCluster(org.arachna.dot4j.model.Graph)}
-     * .
-     */
     @Test
     public final void testEmitEmptyCluster() {
-        final String result = this.generator.emitCluster(graph).toString();
+        final String result = DotGenerator.emitCluster(graph).toString();
 
-        assertEquals("subgraph cluster0 {\n}\n", result);
+        assertEquals("subgraph cluster1 {\n}\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitCluster(org.arachna.dot4j.model.Graph)}
-     * .
-     */
     @Test
     public final void testEmitEmptyClusterWithAttributes() {
-        final Graph cluster = this.graph.newGraph();
-        final Attributes attributes = cluster.getAttributes();
-        attributes.setAttribute("label", "label");
-        final String result = this.generator.emitCluster(cluster).toString();
+        final Graph cluster = graph.newGraph();
+        cluster.setAttribute("label", "label");
+        final String result = DotGenerator.emitCluster(cluster).toString();
 
-        assertEquals("subgraph cluster1 {\nlabel = \"label\";\n}\n", result);
+        assertEquals("subgraph cluster0 {\nlabel=\"label\";\n}\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitNode(org.arachna.dot4j.model.Node)}
-     * .
-     */
     @Test
     public final void testEmitNodeWithAttribute() {
-        final Node node = this.graph.newNode();
-        final Attributes attributes = node.getAttributes();
-        attributes.setAttribute("label", "label");
-        attributes.setAttribute("font", "Helvetica");
+        final Node node = graph.newNode();
+        node.setAttribute("font", "Helvetica");
+        node.setAttribute("label", "label");
 
-        final String result = this.generator.emitNode(node);
+        final String result = DotGenerator.emitNode(node);
 
-        assertEquals("node0 [ font=\"Helvetica\" label=\"label\"];\n", result);
+        assertEquals("0 [font=\"Helvetica\", label=\"label\"];\n", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitAttributes(org.arachna.dot4j.model.Attributes)}
-     * .
-     */
     @Test
     public final void testEmitEmptyAttributes() {
-        final Attributes attributes = new Attributes();
+        final HasAttributes attributes = new Attributes();
 
-        final String result = this.generator.emitAttributes(attributes).toString();
+        final String result = DotGenerator.emitAttributes(attributes).toString();
 
         assertEquals("", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitAttributes(org.arachna.dot4j.model.Attributes)}
-     * .
-     */
     @Test
     public final void testEmitNonEmptyAttribute() {
-        final Attributes attributes = new Attributes();
+        final HasAttributes attributes = new Attributes();
         attributes.setAttribute("label", "label");
 
-        final String result = this.generator.emitAttributes(attributes).toString();
+        final String result = DotGenerator.emitAttributes(attributes).toString();
 
-        assertEquals(" [ label=\"label\"]", result);
+        assertEquals(" [label=\"label\"]", result);
     }
 
-    /**
-     * Test method for
-     * {@link org.arachna.dot4j.DotGenerator#emitAttributes(org.arachna.dot4j.model.Attributes)}
-     * .
-     */
     @Test
     public final void testEmitTwoNonEmptyAttributes() {
-        final Attributes attributes = new Attributes();
-        attributes.setAttribute("label", "label");
-        attributes.setAttribute("font", "Helvetica");
+        final HasAttributes attributes = new Attributes();
+        attributes.setAttribute("font", "Helvetica")
+                .setAttribute("label", "label");
 
-        final String result = this.generator.emitAttributes(attributes).toString();
+        final String result = DotGenerator.emitAttributes(attributes).toString();
 
-        assertEquals(" [ font=\"Helvetica\" label=\"label\"]", result);
+        assertEquals(" [font=\"Helvetica\", label=\"label\"]", result);
     }
 }
