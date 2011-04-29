@@ -6,13 +6,15 @@ package org.arachna.dot4j.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A GraphViz graph.
  *
  * @author Dirk Weigenand
  */
-public final class Graph extends Attributes {
+public final class Graph implements HasAttributes {
     /**
      * Id of this cluster.
      */
@@ -21,12 +23,12 @@ public final class Graph extends Attributes {
     /**
      * common attributes for this graphs nodes.
      */
-    private final HasAttributes nodeAttributes = new Attributes();
+    private final Attributes nodeAttributes = new Attributes();
 
     /**
      * common attributes for this graphs edges.
      */
-    private final HasAttributes edgeAttributes = new Attributes();
+    private final Attributes edgeAttributes = new Attributes();
 
     /**
      * factory for cluster ids.
@@ -52,6 +54,7 @@ public final class Graph extends Attributes {
      * edges in this graph.
      */
     private final Collection<Edge> edges = new ArrayList<Edge>();
+    private final Attributes attributes = new Attributes();
 
     /**
      * Create a subgraph or cluster with the given parent graph.
@@ -73,21 +76,14 @@ public final class Graph extends Attributes {
     private Graph(Graph parent) {
 
         if (parent != null) {
-            clusterIdFactory = parent.getClusterIdFactory();
-            nodeIdFactory = parent.getNodeIdFactory();
+            clusterIdFactory = parent.clusterIdFactory;
+            nodeIdFactory = parent.nodeIdFactory;
         } else {
             clusterIdFactory = new IdFactory();
             nodeIdFactory = new IdFactory();
         }
 
         id = clusterIdFactory.nextId();
-    }
-
-    /**
-     * Create a top level graph object.
-     */
-    public Graph() {
-        this("");
     }
 
     /**
@@ -174,20 +170,6 @@ public final class Graph extends Attributes {
     }
 
     /**
-     * @return the clusterIdFactory
-     */
-    private IdFactory getClusterIdFactory() {
-        return clusterIdFactory;
-    }
-
-    /**
-     * @return the nodeIdFactory
-     */
-    private IdFactory getNodeIdFactory() {
-        return nodeIdFactory;
-    }
-
-    /**
      * @return the id
      */
     public String getId() {
@@ -197,15 +179,53 @@ public final class Graph extends Attributes {
     /**
      * @return the edgeAttributes
      */
-    public HasAttributes getEdgeAttributes() {
+    public Attributes getEdgeAttributes() {
         return edgeAttributes;
     }
 
     /**
      * @return the nodeAttributes
      */
-    public HasAttributes getNodeAttributes() {
+    public Attributes getNodeAttributes() {
         return nodeAttributes;
+    }
+
+    public Graph setAttribute(String key, String value) {
+        attributes.setAttribute(key, value);
+        return this;
+    }
+
+    public Graph setIDAttribute(String key, String id) {
+        attributes.setIDAttribute(key, id);
+        return this;
+    }
+
+    public Graph setAttribute(String key, int value) {
+        attributes.setAttribute(key, value);
+        return this;
+    }
+
+    public Graph setAttribute(String key, long value) {
+        attributes.setAttribute(key, value);
+        return this;
+    }
+
+    public Graph setAttribute(String key, float value) {
+        attributes.setAttribute(key, value);
+        return this;
+    }
+
+    public Graph setAttribute(String key, double value) {
+        attributes.setAttribute(key, value);
+        return this;
+    }
+
+    public boolean isEmpty() {
+        return attributes.isEmpty();
+    }
+
+    public Iterator<Map.Entry<String, String>> iterator() {
+        return attributes.iterator();
     }
 
     protected static final class IdFactory {
