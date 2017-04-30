@@ -87,14 +87,14 @@ public class DotGeneratorTest {
         final Graph secondCluster = graph.newGraph();
         final String result = DotGenerator.emitClusters(Arrays.asList(firstCluster, secondCluster)).toString();
 
-        assertEquals("subgraph cluster0 {\n}\nsubgraph cluster1 {\n}\n", result);
+        assertEquals("subgraph subgraph0 {\n}\nsubgraph subgraph1 {\n}\n", result);
     }
 
     @Test
     public final void testEmitEmptyCluster() {
         final String result = DotGenerator.emitCluster(graph).toString();
 
-        assertEquals("subgraph cluster1 {\n}\n", result);
+        assertEquals("subgraph subgraph1 {\n}\n", result);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class DotGeneratorTest {
         cluster.setAttribute("label", "label");
         final String result = DotGenerator.emitCluster(cluster).toString();
 
-        assertEquals("subgraph cluster0 {\nlabel=\"label\";\n}\n", result);
+        assertEquals("subgraph subgraph0 {\nlabel=\"label\";\n}\n", result);
     }
 
     @Test

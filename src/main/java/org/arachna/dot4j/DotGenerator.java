@@ -131,7 +131,7 @@ public final class DotGenerator {
     protected static StringBuffer emitCluster(final Graph cluster) {
         final StringBuffer result = new StringBuffer();
 
-        result.append(String.format("subgraph cluster%s {\n", cluster.getId()));
+        result.append(String.format("subgraph subgraph%s {\n", cluster.getId()));
         result.append(emitGraph(cluster));
         result.append("}\n");
 
